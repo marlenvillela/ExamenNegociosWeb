@@ -3,12 +3,12 @@
 namespace Controllers;
 
 use Controllers\PublicController;
-use Dao\Examen\Productos as ProductosDAO;
+use Dao\Productos as ProductosDAO;
 use Utilities\Site;
 use Utilities\Validators;
 use Views\Renderer;
 
-const LIST_URL = "index.php?page=Examen-Productos";
+const LIST_URL = "index.php?page=Productos";
 const XSR_KEY = "xsrToken_productos";
 
 class Producto extends PublicController
@@ -18,12 +18,15 @@ class Producto extends PublicController
 
     public function __construct()
     {
+        parent::__construct(); // 🔴 OBLIGATORIO
+
         $this->modes = [
             "INS" => 'Creando nuevo Producto',
             "UPD" => 'Modificando Producto %s %s',
             "DEL" => 'Eliminando Producto %s %s',
             "DSP" => 'Mostrando Detalle de %s %s'
         ];
+
         $this->viewData = [
             "id_producto" => 0,
             "nombre" => "",
@@ -54,7 +57,7 @@ class Producto extends PublicController
         }
 
         $this->prepararVista();
-        Renderer::render("examen/producto", $this->viewData);
+        Renderer::render("producto", $this->viewData); // ✅ VISTA CORRECTA
     }
 
     private function throwError(string $message)
@@ -74,7 +77,7 @@ class Producto extends PublicController
 
     private function datosDeDao()
     {
-        if ($this->viewData["mode"] != "INS") {
+        if ($this->viewData["mode"] !== "INS") {
             if (isset($_GET["id"])) {
                 $this->viewData["id_producto"] = intval($_GET["id"]);
                 $producto = ProductosDAO::getProductoById($this->viewData["id_producto"]);
@@ -120,6 +123,7 @@ class Producto extends PublicController
         if (Validators::IsEmpty($this->viewData["fecha_lanzamiento"])) {
             $this->viewData["errores"]["fecha_lanzamiento"] = "La fecha de lanzamiento es requerida";
         }
+
         $tmpXsrToken = $_SESSION[XSR_KEY] ?? "";
         if ($this->viewData["xsrToken"] !== $tmpXsrToken) {
             error_log("Intento ingresar con un token inválido.");
@@ -145,6 +149,7 @@ class Producto extends PublicController
                     $this->viewData["errores"]["global"] = ["Error al crear nuevo producto."];
                 }
                 break;
+
             case "UPD":
                 if (
                     ProductosDAO::actualizarProducto(
@@ -161,6 +166,7 @@ class Producto extends PublicController
                     $this->viewData["errores"]["global"] = ["Error al actualizar el producto."];
                 }
                 break;
+
             case "DEL":
                 if (ProductosDAO::eliminarProducto($this->viewData["id_producto"])) {
                     Site::redirectToWithMsg(LIST_URL, "Producto eliminado exitosamente.");
@@ -173,26 +179,32 @@ class Producto extends PublicController
 
     private function prepararVista()
     {
-        $this->viewData["modeDsc"] = sprintf(
-            $this->modes[$this->viewData["mode"]],
-            $this->viewData["nombre"],
-            $this->viewData["id_producto"]
-        );
+        if (!empty($this->viewData["mode"])) {
+            $this->viewData["modeDsc"] = sprintf(
+                $this->modes[$this->viewData["mode"]],
+                $this->viewData["nombre"],
+                $this->viewData["id_producto"]
+            );
+        }
 
         if (count($this->viewData["errores"]) > 0) {
             foreach ($this->viewData["errores"] as $campo => $error) {
-                $this->viewData['error_' . $campo] = $error;
+                $this->viewData["error_" . $campo] = $error;
             }
         }
 
         if ($this->viewData["mode"] === "DEL" || $this->viewData["mode"] === "DSP") {
             $this->viewData["readonly"] = "readonly";
         }
+
         if ($this->viewData["mode"] === "DSP") {
             $this->viewData["showAction"] = false;
         }
 
-        $this->viewData["xsrToken"] = hash("sha256", random_int(0, 1000000) . time() . 'producto' . $this->viewData["mode"]);
+        $this->viewData["xsrToken"] = hash(
+            "sha256",
+            random_int(0, 1000000) . time() . 'producto' . $this->viewData["mode"]
+        );
         $_SESSION[XSR_KEY] = $this->viewData["xsrToken"];
     }
 }
