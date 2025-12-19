@@ -1,14 +1,10 @@
 <?php
 
-
 namespace Utilities;
-
 
 class Site
 {
-    /**
-     * Redirige a una página con mensaje (simple)
-     */
+   
     public static function redirectToWithMsg(string $url, string $message = ""): void
     {
         if (!empty($message)) {
@@ -18,5 +14,3 @@ class Site
         exit();
     }
 }
-
-

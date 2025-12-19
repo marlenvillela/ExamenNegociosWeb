@@ -17,6 +17,3 @@ abstract class PublicController
         return $_SERVER["REQUEST_METHOD"] === "POST";
     }
 }
-
-
-

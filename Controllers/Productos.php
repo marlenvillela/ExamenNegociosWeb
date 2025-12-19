@@ -1,33 +1,25 @@
-namespace Controllers;
+<?php
 
+namespace Controllers\Examen;
 
 use Controllers\PublicController;
-use Dao\Productos as ProductosDAO;
+use Dao\Examen\Libros as LibrosDAO;
 use Views\Renderer;
 
-
-class Productos extends PublicController
+class Libros extends PublicController
 {
     private array $viewData;
-
 
     public function __construct()
     {
         $this->viewData = [
-            "productos" => []
+            "libros" => []
         ];
     }
 
-
     public function run(): void
     {
-        // Obtener productos desde el DAO
-        $this->viewData["productos"] = ProductosDAO::getProductos();
-
-
-        // Renderizar la vista correcta
-        Renderer::render("productos", $this->viewData);
+        $this->viewData["libros"] = LibrosDAO::getLibros();
+        Renderer::render("examen/libros", $this->viewData);
     }
 }
-
-
